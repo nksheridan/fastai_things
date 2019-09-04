@@ -1,0 +1,24 @@
+#fast.ai lesson 3 submit to kaggle code with bash commands in jupyter notebook
+# public kaggle score is 0.93057. See the mv for test-jpg-additional vs. lesson 3.
+
+!kaggle competitions download -c planet-understanding-the-amazon-from-space -f test-jpg.tar.7z
+!7z e test-jpg.tar.7z
+!tar xf test-jpg.tar
+
+!kaggle competitions download -c planet-understanding-the-amazon-from-space -f test-jpg-additional.tar.7z
+!7z e test-jpg-additional.tar.7z
+!tar xf test-jpg-additional.tar
+
+!mv test-jpg-additional/* test-jpg
+
+test = ImageList.from_folder(path/'test-jpg')
+len(test)
+learn = load_learner(path, test=test)
+preds, _ = learn.get_preds(ds_type=DatasetType.Test)
+thresh = 0.2
+labelled_preds = [' '.join([learn.data.classes[i] for i,p in enumerate(pred) if p > thresh]) for pred in preds]
+labelled_preds[:6]
+fnames = [f.name[:-4] for f in learn.data.test_ds.items]
+df = pd.DataFrame({'image_name':fnames, 'tags':labelled_preds}, columns=['image_name', 'tags'])
+df.to_csv(path/'submission.csv', index=False)
+!kaggle competitions submit planet-understanding-the-amazon-from-space -f {path/'submission.csv'} -m "My submission"
